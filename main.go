@@ -19,7 +19,7 @@ type SSUrl struct {
 }
 
 func main() {
-	fmt.Println("Starting...")
+	startTime := time.Now()
 
 	urls := []SSUrl{
 		{URL: "https://keeplearning.dev/", Selector: `div.hero`, Prefix: "k"},
@@ -34,15 +34,19 @@ func main() {
 	defer cancel()
 
 	var wg sync.WaitGroup
+	const grMax = 5 // Number of goroutines to run concurrently
+	ch := make(chan int, grMax)
 
 	for _, url := range urls {
 		// Increment the wait group counter for each URL
 		wg.Add(1)
+		ch <- 1
 
 		// Execute tasks concurrently inside a goroutine
 		go func(u SSUrl) {
-			defer wg.Done()
+			defer func() { wg.Done(); <-ch }()
 			log.Printf("Capturing screenshot for URL: %s", u.URL)
+			// same browser, second tab
 			newCtx, _ := chromedp.NewContext(ctx)
 			captureScreenshot(newCtx, u)
 		}(url)
@@ -51,8 +55,9 @@ func main() {
 	// Wait for all goroutines to finish
 	wg.Wait()
 
-	fmt.Println("All screenshots captured.")
-
+	endTime := time.Now()
+	scriptDuration := endTime.Sub(startTime)
+	fmt.Println("All screenshots captured in => ", scriptDuration)
 }
 
 func captureScreenshot(ctx context.Context, u SSUrl) {
