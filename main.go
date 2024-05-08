@@ -23,6 +23,8 @@ func main() {
 
 	urls := []SSUrl{
 		{URL: "https://keeplearning.dev/", Selector: `div.hero`, Prefix: "k"},
+		{URL: "https://go.dev/", Selector: `img.Hero-gopherLadder`, Prefix: "go1"},
+		{URL: "https://go.dev/", Selector: `img.Hero-gopherLadder`, Prefix: "go2"},
 	}
 
 	ctx, cancel := chromedp.NewContext(
@@ -41,7 +43,8 @@ func main() {
 		go func(u SSUrl) {
 			defer wg.Done()
 			log.Printf("Capturing screenshot for URL: %s", u.URL)
-			captureScreenshot(ctx, u)
+			newCtx, _ := chromedp.NewContext(ctx)
+			captureScreenshot(newCtx, u)
 		}(url)
 	}
 
